@@ -1,7 +1,14 @@
 import { skin } from "./skin.js";
 import { options } from "../play/src/engine/configuration.js"
 
-//static layout used for drawing stuff
+
+export const streamId = {
+  dir: 0,
+  apple: 1,
+  death: 2,
+}
+
+//static layouts used for drawing stuff
 export const layout = {
   sqaure: Rect.one.mul(0.08),
   line: new Rect({ l: -0.08, r: 0.08, b: -0.01, t: 0.01, }), //used for shadows and eyelid
@@ -81,7 +88,7 @@ export const drawDpad = (dpadLayout: { right: Quad, left: Quad, down: Rect, up: 
 
 export const drawScore = (
   score: number,
-  layouts: { digit1: Rect, digit2: Rect, digit3: Rect, title: Rect },
+  scoreLayouts: { digit1: Rect, digit2: Rect, digit3: Rect, title: Rect },
   timeDelta: number,
 
 ) => {
@@ -92,31 +99,31 @@ export const drawScore = (
     layout.scoreDigit
       .mul(scale)
       .translate(screen.r * 0.75 + 0.15, 0.04)
-      .copyTo(layouts.digit1)
+      .copyTo(scoreLayouts.digit1)
     layout.scoreDigit
       .mul(scale)
       .translate(screen.r * 0.75, 0.04)
-      .copyTo(layouts.digit2)
+      .copyTo(scoreLayouts.digit2)
     layout.scoreDigit
       .mul(scale)
       .translate(screen.r * 0.75 - 0.15, 0.04)
-      .copyTo(layouts.digit3)
+      .copyTo(scoreLayouts.digit3)
 
     layout.score
       .mul(scale)
       .translate(screen.r * 0.75, -0.14)
-      .copyTo(layouts.title)
+      .copyTo(scoreLayouts.title)
   }
 
   const digit1 = Math.floor(score % 10) + skin.sprites.numberZero.id as SkinSpriteId
   const digit2 = Math.floor(score / 10 % 10) + skin.sprites.numberZero.id as SkinSpriteId
   const digit3 = Math.floor(score / 100) + skin.sprites.numberZero.id as SkinSpriteId
 
-  skin.sprites.draw(digit1, layouts.digit1, 100, alpha)
-  skin.sprites.draw(digit2, layouts.digit2, 101, alpha)
-  skin.sprites.draw(digit3, layouts.digit3, 102, alpha)
+  skin.sprites.draw(digit1, scoreLayouts.digit1, 100, alpha)
+  skin.sprites.draw(digit2, scoreLayouts.digit2, 101, alpha)
+  skin.sprites.draw(digit3, scoreLayouts.digit3, 102, alpha)
 
-  skin.sprites.score.draw(layouts.title, 110, alpha)
+  skin.sprites.score.draw(scoreLayouts.title, 110, alpha)
 }
 
 /** animation used in the "no walls" game mode only

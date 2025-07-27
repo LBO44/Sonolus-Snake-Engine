@@ -1,9 +1,10 @@
 import { effect } from "../../../../../shared/effect.js"
+import { streamId } from "../../../../../shared/utilities.js"
 import { options } from "../../configuration.js"
 
 //game variables
 
-//pos is snake position
+//pos is snake head position
 export const pos = levelMemory({
   x: Number,
   y: Number
@@ -22,14 +23,6 @@ export const game = levelMemory({
   bodyColour: Boolean,//used to alternate the body colours
 })
 
-//used to export data to replay mode
-export const data = levelMemory({
-  shouldSaveDirection: Boolean,
-  shouldSaveApple: Boolean,
-  shouldSaveDeath: Boolean,
-  Index: Number,
-})
-
 export const apple = levelMemory({
   x: Number,
   y: Number,
@@ -42,7 +35,7 @@ export const apple = levelMemory({
 export const death = () => {
   game.lose = true
   if (options.bgm) effect.clips.bgm_end.play(0.02); else effect.clips.die.play(0.02)
-  data.shouldSaveDeath = true
   game.deathTime = time.now
+  streams.set(streamId.death, game.tick, 1)
 }
 

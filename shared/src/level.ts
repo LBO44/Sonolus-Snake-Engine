@@ -15,16 +15,9 @@ const data: LevelData = {
         value: index + 1
       }],
     })),
-    ...Array.from({ length: 100 }, (_, index) => ({
-      archetype: 'Data',
-      data: [{
-        name: "DataIndex",
-        value: index
-      }],
-    })),
   ],
 }
 
 export const level = {
-    data,
+  data,
 }

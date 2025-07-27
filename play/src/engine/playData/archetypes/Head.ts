@@ -1,9 +1,9 @@
-import { options } from "../../configuration.js"
-import { skin } from '../../../../../shared/skin.js'
-import { pos, game, apple, death, data } from "./Shared.js"
-import { scaleToGrid as tg, layout, floatingEffect, HeadAppearAnimation, drawScore, dpadInitialize, drawDpad } from "../../../../../shared/utilities.js"
-import { archetypes } from "./index.js";
 import { effect } from "../../../../../shared/effect.js";
+import { skin } from '../../../../../shared/skin.js';
+import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, scaleToGrid as tg } from "../../../../../shared/utilities.js";
+import { options } from "../../configuration.js";
+import { archetypes } from "./index.js";
+import { apple, death, game, pos } from "./Shared.js";
 
 /**The snake head entity execute the majority of the game's logic*/
 export class Head extends Archetype {
@@ -137,7 +137,7 @@ export class Head extends Archetype {
     //make sure apple didnt spawn in body 🍏
     if (!apple.shouldSpawn && apple.shouldCheckSpawn) {
       apple.shouldCheckSpawn = false
-      data.shouldSaveApple = true
+      streams.set(streamId.apple, game.tick, apple.x * 10 + apple.y)
     }
 
     //spawn apple 
@@ -180,8 +180,8 @@ export class Head extends Archetype {
     //when the direction changes
     if (game.dir != this.previousDir) {
       effect.clips.swipe.play(0.02)
-      data.shouldSaveDirection = true
       this.previousDir = game.dir
+      streams.set(streamId.dir, game.tick, game.dir)
     }
 
     //spawn new body part 🐍

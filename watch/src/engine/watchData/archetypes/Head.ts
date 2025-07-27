@@ -1,8 +1,8 @@
-import { options } from "../../configuration.js"
 import { skin } from '../../../../../shared/skin.js'
-import { pos, game, apple, body } from "./Shared.js"
-import { scaleToGrid as tg, layout, floatingEffect, drawScore, drawDpad, dpadInitialize, HeadAppearAnimation } from "../../../../../shared/utilities.js"
+import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, scaleToGrid as tg } from "../../../../../shared/utilities.js"
+import { options } from "../../configuration.js"
 import { archetypes } from "./index.js"
+import { apple, body, game, pos } from "./Shared.js"
 
 export class Head extends Archetype {
 
@@ -70,6 +70,11 @@ export class Head extends Archetype {
     archetypes.Body.spawn({})
     body.pos.set(0, 413)
     body.tickLeft.set(0, 3)
+
+    const value = streams.getValue(streamId.apple, 0)
+    apple.x = Math.floor(value * 0.1)
+    apple.y = value % 10
+
   }
 
 
@@ -99,10 +104,7 @@ export class Head extends Archetype {
     game.isTick = true
     game.tick++
 
-    this.checkData(game.dataDir)
-    game.dataDir = 0
-    this.checkData(game.dataDir2)
-    game.dataDir2 = 0
+    this.checkStreams(game.tick)
 
     //move head ➡️
     this.oldPos.x = pos.x
@@ -131,37 +133,24 @@ export class Head extends Archetype {
     if (Math.random() >= 0.08) this.blink = time.now + 0.5
   }
 
+  checkStreams(tick: number) {
+    if (streams.has(streamId.dir, tick)) game.dir = streams.getValue(streamId.dir, tick)
+    if (streams.has(streamId.apple, tick)) {
+      const value = streams.getValue(streamId.apple, tick)
+      apple.x = Math.floor(value * 0.1)
+      apple.y = value % 10
+      game.size++
+      if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
+      this.scoreUpdateTime = time.now + 0.5
 
-  checkData(dir: number) {
-
-    //load saved data, remember that game.dataDir was set
-    //during previous tick and will be updated this frame after head updateSequential
-    if (dir > 0) {
-
-      //direction change
-      if (dir <= 4) game.dir = dir
-
-      //apple eating🍏
-      if (Math.floor(dir * 0.01) == 5) {
-        apple.x = Math.floor((dir % 100) * 0.1)
-        apple.y = dir % 10
-        if (game.tick > 1) {
-          game.size++
-          if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
-          this.scoreUpdateTime = time.now + 0.5
-        }
-      }
-
-      //losing 
-      if (dir == 6) {
-        game.lose = true
-        game.dir = 0
-        game.nextTickAnimationProgress = 0
-        game.deathTime = time.now
-      }
+    }
+    if (streams.has(streamId.death, tick)) {
+      game.lose = true
+      game.dir = 0
+      game.nextTickAnimationProgress = 0
+      game.deathTime = time.now
     }
   }
-
 
   drawGame() {
 
