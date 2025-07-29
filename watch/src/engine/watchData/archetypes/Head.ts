@@ -52,28 +52,19 @@ export class Head extends Archetype {
       background: true,
     })
 
-    // ui.progress.set({
-    //     anchor: screen.rect.lb.add(new Vec(0.05, 0.05)),
-    //     pivot: { x: 0, y: 0 },
-    //     size: { x: screen.rect.w - 0.1, y: 0.15 * ui.configuration.progress.scale },
-    //     rotation: 0,
-    //     alpha: ui.configuration.progress.alpha,
-    //     horizontalAlign: HorizontalAlign.Center,
-    //     background: true,
-    // })
+    ui.progress.set({
+      anchor: screen.rect.lb.add(new Vec(0.05, 0.05)),
+      pivot: { x: 0, y: 0 },
+      size: { x: screen.rect.w - 0.1, y: 0.15 * ui.configuration.progress.scale },
+      rotation: 0,
+      alpha: ui.configuration.progress.alpha,
+      horizontalAlign: HorizontalAlign.Center,
+      background: true,
+    })
 
-    game.size = 3
-    pos.x = 1
-    pos.y = 3
-    game.tickDuration = 0.4
+    this.resetGame()
 
     archetypes.Body.spawn({})
-    body.pos.set(0, 413)
-    body.tickLeft.set(0, 3)
-
-    const value = streams.getValue(streamId.apple, 0)
-    apple.x = Math.floor(value * 0.1)
-    apple.y = value % 10
 
   }
 
@@ -87,6 +78,7 @@ export class Head extends Archetype {
 
 
   updateSequential() {
+    if (time.skip) this.skipTime()
 
     //tick logic
     game.isTick = false
@@ -96,6 +88,46 @@ export class Head extends Archetype {
     }
 
     this.drawGame()
+  }
+
+  skipTime() {
+
+    let timeLoop = 0
+    this.resetGame()
+    if (time.now == -2) {
+      this.onTick()
+      return
+    }
+    while (timeLoop <= time.now - game.tickDuration) {
+      this.onTick()
+      timeLoop += game.tickDuration
+      this.nextTickTime = timeLoop + game.tickDuration
+    }
+
+
+  }
+
+  resetGame() {
+    game.lose = false
+    game.tick = 0
+
+    game.size = 3
+    pos.x = 1
+    pos.y = 3
+    this.oldPos.x = pos.x
+    this.oldPos.y = pos.y
+
+    game.tickDuration = 0.4
+    this.borderAlert = false
+
+
+    body.pos.set(0, 413)
+    body.tickLeft.set(0, 3)
+
+    const value = streams.getValue(streamId.apple, 0)
+    apple.x = Math.floor(value * 0.1)
+    apple.y = value % 10
+
   }
 
   onTick() {
@@ -135,6 +167,7 @@ export class Head extends Archetype {
 
   checkStreams(tick: number) {
     if (streams.has(streamId.dir, tick)) game.dir = streams.getValue(streamId.dir, tick)
+
     if (streams.has(streamId.apple, tick)) {
       const value = streams.getValue(streamId.apple, tick)
       apple.x = Math.floor(value * 0.1)
@@ -142,8 +175,8 @@ export class Head extends Archetype {
       game.size++
       if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
       this.scoreUpdateTime = time.now + 0.5
-
     }
+
     if (streams.has(streamId.death, tick)) {
       game.lose = true
       game.dir = 0
@@ -159,7 +192,7 @@ export class Head extends Archetype {
 
       //shake camera (grid)
       const shake = Math.pow(Math.max(game.deathTime + 1 - time.now, 0) * 0.1, 2)
-      skin.sprites.grid.draw(layout.grid.translate(Math.randomFloat(-shake, shake), Math.randomFloat(-shake, shake)), 2, 1)
+      if (!time.skip) skin.sprites.grid.draw(layout.grid.translate(Math.randomFloat(-shake, shake), Math.randomFloat(-shake, shake)), 2, 1)
 
       //draw head dead 💀
       skin.sprites.headDead.draw(layout.sqaure
