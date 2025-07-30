@@ -1,29 +1,12 @@
 import { skin } from '../../../../../shared/skin.js'
-import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, scaleToGrid as tg } from "../../../../../shared/utilities.js"
+import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, TailDespawnAnimation, scaleToGrid as tg } from "../../../../../shared/utilities.js"
 import { options } from "../../configuration.js"
-import { archetypes } from "./index.js"
-import { apple, body, game, pos } from "./Shared.js"
 
 export class Head extends Archetype {
-
-
-  updateSequentialOrder = 0
 
   spawnTime() { return -999999 }
   despawnTime() { return 999999 }
 
-
-  //entity memory
-  nextTickTime = this.entityMemory(Number)
-  borderAlert = this.entityMemory(Boolean)
-  hasWrapped = this.entityMemory(Boolean)
-  blink = this.entityMemory(Number)
-  oldPos = this.entityMemory({
-    x: Number,
-    y: Number
-  })
-
-  layoutAppear = this.entityMemory(Rect) //used for the tp animatipn with the no walls option
 
   dpadLayout = this.entityMemory({
     up: Rect,
@@ -32,7 +15,6 @@ export class Head extends Archetype {
     right: Quad
   })
 
-  scoreUpdateTime = this.entityMemory(Number)
   scoreLayouts = this.entityMemory({
     digit1: Rect,
     digit2: Rect,
@@ -61,197 +43,160 @@ export class Head extends Archetype {
       horizontalAlign: HorizontalAlign.Center,
       background: true,
     })
-
-    this.resetGame()
-
-    archetypes.Body.spawn({})
-
   }
 
 
   initialize() {
     if (options.dpad) dpadInitialize(this.dpadLayout)
-
-    this.oldPos.x = pos.x
-    this.oldPos.y = pos.y
   }
 
 
-  updateSequential() {
-    if (time.skip) this.skipTime()
 
-    //tick logic
-    game.isTick = false
-    if (this.nextTickTime < time.now && !game.lose) {
-      this.nextTickTime = time.now + game.tickDuration
-      this.onTick()
-    }
-
-    this.drawGame()
+  getDir(key: number, x: number, y: number) {
+    let dir = 0
+    if (x < streams.getValue(streamId.headX, key + 0.01)) dir = 4
+    else if (x > streams.getValue(streamId.headX, key + 0.01)) dir = 2
+    else if (y < streams.getValue(streamId.headY, key + 0.01)) dir = 1
+    else if (y > streams.getValue(streamId.headY, key + 0.01)) dir = 3
+    return dir
   }
 
-  skipTime() {
 
-    let timeLoop = 0
-    this.resetGame()
-    if (time.now == -2) {
-      this.onTick()
-      return
-    }
-    while (timeLoop <= time.now - game.tickDuration) {
-      this.onTick()
-      timeLoop += game.tickDuration
-      this.nextTickTime = timeLoop + game.tickDuration
-    }
-
-
+  animationProgress() {
+    //progress value for the lerp animation for head and body
+    const previousKeyTime = streams.getPreviousKey(streamId.headX, time.now)
+    const nextKeyTime = streams.getNextKey(streamId.headX, time.now)
+    return (time.now - previousKeyTime) / (nextKeyTime - previousKeyTime)
   }
 
-  resetGame() {
-    game.lose = false
-    game.tick = 0
 
-    game.size = 3
-    pos.x = 1
-    pos.y = 3
-    this.oldPos.x = pos.x
-    this.oldPos.y = pos.y
+  drawBody(size: number, deathTime: number) {
 
-    game.tickDuration = 0.4
-    this.borderAlert = false
+    let prevKey = time.now
 
+    for (let index = 0; index < size; index++) {
 
-    body.pos.set(0, 413)
-    body.tickLeft.set(0, 3)
+      prevKey = streams.getPreviousKey(streamId.headX, prevKey)
 
-    const value = streams.getValue(streamId.apple, 0)
-    apple.x = Math.floor(value * 0.1)
-    apple.y = value % 10
+      const x = streams.getValue(streamId.headX, prevKey)
+      const y = streams.getValue(streamId.headY, prevKey)
 
-  }
+      const bodySkin = (y + x) % 2 == 0 ? skin.sprites.bodyLight.id : skin.sprites.bodyDark.id
 
-  onTick() {
-    this.hasWrapped = false
+      if (time.now < deathTime && index == size - 1) {
+        let rect = new Rect
+        TailDespawnAnimation(rect, this.getDir(prevKey, x, y), { x: x, y: y }, this.animationProgress())
+        skin.sprites.shadow.draw(rect.translate(0, -0.02), 39, 1)
+        skin.sprites.draw(bodySkin, rect, 40, 1)
+      }
 
-    game.isTick = true
-    game.tick++
+      else {
 
-    this.checkStreams(game.tick)
+        let yOffset = 0 //death animation
+        if (index > 0 && time.now >= deathTime) {
+          const p = time.now - deathTime - ((index) * 0.15)
+          if (p >= 0 && p <= 0.15) {
+            yOffset = Math.max(0, 0.02 * Math.sin(p / 0.1 * Math.PI)) + 0.02
+          }
+        }
 
-    //move head ➡️
-    this.oldPos.x = pos.x
-    this.oldPos.y = pos.y
-    switch (game.dir) {
-      case 4: pos.x++; break
-      case 2: pos.x--; break
-      case 1: pos.y++; break
-      case 3: pos.y--; break
-    }
+        const bodyRect = layout.sqaure.translate(tg(x), tg(y) + 0.02 + yOffset)
+        const shadow = layout.line.translate(tg(x), tg(y) - 0.07 + yOffset)
 
-    //wrap 🧱
-    if (Math.max(pos.x, pos.y) > 9 || Math.min(pos.x, pos.y) < 0) {
-      if (options.noWall) {
-        //wrap to the other side
-        pos.x = ((pos.x % 10) + 10) % 10
-        pos.y = ((pos.y % 10) + 10) % 10
-        this.hasWrapped = true
+        skin.sprites.shadow.draw(shadow, 39, 1)
+        skin.sprites.draw(bodySkin, bodyRect, 40, 1)
       }
     }
-
-    // blinking border animation 
-    if (!options.noWall) this.borderAlert = (Math.max(pos.x, pos.y) > 8 || Math.min(pos.x, pos.y) < 1)
-
-    //randomly blink 👁️
-    if (Math.random() >= 0.08) this.blink = time.now + 0.5
   }
 
-  checkStreams(tick: number) {
-    if (streams.has(streamId.dir, tick)) game.dir = streams.getValue(streamId.dir, tick)
+  drawHeadAndUI(size: number, deathTime: number) {
 
-    if (streams.has(streamId.apple, tick)) {
-      const value = streams.getValue(streamId.apple, tick)
-      apple.x = Math.floor(value * 0.1)
-      apple.y = value % 10
-      game.size++
-      if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
-      this.scoreUpdateTime = time.now + 0.5
+    const oldPos = {
+      x: streams.getValue(streamId.headX, streams.getPreviousKey(streamId.headX, time.now)),
+      y: streams.getValue(streamId.headY, streams.getPreviousKey(streamId.headY, time.now))
+    }
+    const newPos = {
+      x: streams.getValue(streamId.headX, streams.getNextKey(streamId.headX, time.now)),
+      y: streams.getValue(streamId.headY, streams.getNextKey(streamId.headY, time.now))
+    }
+    const pos = {
+      x: streams.getValue(streamId.headX, time.now),
+      y: streams.getValue(streamId.headY, time.now),
     }
 
-    if (streams.has(streamId.death, tick)) {
-      game.lose = true
-      game.dir = 0
-      game.nextTickAnimationProgress = 0
-      game.deathTime = time.now
-    }
-  }
 
-  drawGame() {
-
-    //draw the dead snake's head 💀
-    if (game.lose) {
+    if (time.now >= deathTime) {
 
       //shake camera (grid)
-      const shake = Math.pow(Math.max(game.deathTime + 1 - time.now, 0) * 0.1, 2)
+      const shake = Math.pow(Math.max(deathTime + 1 - time.now, 0) * 0.1, 2)
       if (!time.skip) skin.sprites.grid.draw(layout.grid.translate(Math.randomFloat(-shake, shake), Math.randomFloat(-shake, shake)), 2, 1)
 
       //draw head dead 💀
       skin.sprites.headDead.draw(layout.sqaure
-        .translate(tg(this.oldPos.x), tg(this.oldPos.y) + 0.02), 50, 1)
+        .translate(tg(oldPos.x), tg(oldPos.y) + 0.02), 50, 1)
       skin.sprites.shadow.draw(layout.line
-        .translate(tg(this.oldPos.x), tg(this.oldPos.y) - 0.07), 39, 1)
+        .translate(tg(oldPos.x), tg(oldPos.y) - 0.07), 39, 1)
     }
 
-    //draw the snake's head alive ♥️
     else {
-
-      //progress value for the lerp animation for head and body
-      game.nextTickAnimationProgress = (time.now - this.nextTickTime + game.tickDuration) / game.tickDuration
-
       //draw head appearing from other side if the snake passed through a wall
-      if (this.hasWrapped) {
-        HeadAppearAnimation(this.layoutAppear, pos, game.dir, game.nextTickAnimationProgress)
-        skin.sprites.head.draw(this.layoutAppear, 50, 1)
-        skin.sprites.shadow.draw(this.layoutAppear.translate(0, -0.02), 39, 1)
+      const hasWrapped = options.noWall && (Math.abs(newPos.x - oldPos.x) > 1 || Math.abs(newPos.y - oldPos.y) > 1)
+
+      if (hasWrapped) {
+        let layoutAppear = new Rect
+        HeadAppearAnimation(layoutAppear, newPos, this.getDir(time.now, newPos.x, newPos.y), this.animationProgress())
+        skin.sprites.head.draw(layoutAppear, 50, 1)
+        skin.sprites.shadow.draw(layoutAppear.translate(0, -0.02), 39, 1)
       }
 
       //draw the head normally
       else {
-        skin.sprites.head.draw(
-          layout.sqaure.translate(
-            tg(Math.lerp(this.oldPos.x, pos.x, game.nextTickAnimationProgress)),
-            tg(Math.lerp(this.oldPos.y, pos.y, game.nextTickAnimationProgress)) + 0.02,
-          ), 50, 1)
-
-        //eyelid animation 
-        const a = Math.max(0, Math.min(0.04, (((this.blink - time.now) * -1) * 0.05)))
-        skin.sprites.eyelid.draw(layout.line.translate(
-          tg(Math.lerp(this.oldPos.x, pos.x, game.nextTickAnimationProgress)),
-          tg(Math.lerp(this.oldPos.y, pos.y, game.nextTickAnimationProgress)) + 0.09 - a),
-          51, 1)
-
-        //shadow below the head
-        skin.sprites.shadow.draw(layout.line.translate(tg(Math.lerp(this.oldPos.x, pos.x, game.nextTickAnimationProgress)), tg(Math.lerp(this.oldPos.y, pos.y, game.nextTickAnimationProgress)) - 0.07), 39, 1)
+        skin.sprites.head.draw(layout.sqaure.translate(tg(pos.x), tg(pos.y) + 0.02), 50, 1)
+        skin.sprites.shadow.draw(layout.line.translate(tg(pos.x), tg(pos.y) - 0.07), 39, 1)
       }
 
-      //drawing the blinking border
-      if (this.borderAlert && (Math.floor(time.now * 5) % 2 === 0)) skin.sprites.borderDanger.draw(layout.gridBorder, 4, 0.5)
-
-      //draw time limit progress bar
-      if (options.timeLimit != 0) skin.sprites.shadow.draw(new Rect({ l: screen.l, r: Math.remap(0, options.timeLimit, screen.r, screen.l, time.now), b: screen.t - 0.04, t: screen.t }), 120, 1)
     }
 
+
+    //drawing the blinking border
+    const isOnSides = (Math.max(pos.x, pos.y) > 8 || Math.min(pos.x, pos.y) < 1)
+    const isBlinkTime = (Math.floor(time.now * 5) % 2 === 0)
+    if (!options.noWall && isBlinkTime && isOnSides) skin.sprites.borderDanger.draw(layout.gridBorder, 4, 0.5)
+
+    //draw time limit progress bar
+    if (options.timeLimit != 0) skin.sprites.shadow.draw(new Rect({ l: screen.l, r: Math.remap(0, options.timeLimit, screen.r, screen.l, time.now), b: screen.t - 0.04, t: screen.t }), 120, 1)
+
     //draw apple 🍎
-    if (time.now > 0) skin.sprites.apple.draw(
+    const appleValue = streams.getValue(streamId.apple, streams.getPreviousKey(streamId.apple, time.now))
+    const apple = {
+      x: Math.floor(appleValue * 0.1),
+      y: appleValue % 10
+    }
+
+    skin.sprites.apple.draw(
       floatingEffect(layout.sqaure)
-        .translate(tg(apple.x), tg(apple.y) + 0.02), 50, 1)
+        .translate(tg(apple.x), tg(apple.y) + 0.02), 40, 1)
 
     //draw grid ⬜
     skin.sprites.grid.draw(layout.grid, 1, 1)
     skin.sprites.border.draw(layout.gridBorder, 3, 1)
 
     //draw UI
-    if (options.dpad) drawDpad(this.dpadLayout, game.dir)
-    drawScore(Math.min(999, game.size - 3), this.scoreLayouts, this.scoreUpdateTime - time.now)
+    if (options.dpad) drawDpad(this.dpadLayout, 0 /*game.dir*/)
+    drawScore(Math.min(999, size - 3), this.scoreLayouts, streams.getPreviousKey(streamId.size, time.now) + 0.5 - time.now)
+
+  }
+
+
+  updateParallel() {
+
+    const size = Math.floor(streams.getValue(streamId.size, time.now))
+
+    const deathTime = streams.getNextKey(streamId.death, 0)
+
+    this.drawBody(size - 1, deathTime)
+
+    this.drawHeadAndUI(size, deathTime)
   }
 
 }

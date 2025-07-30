@@ -71,6 +71,7 @@ export class Head extends Archetype {
     this.dir = 4
 
     archetypes.Body.spawn({})
+    streams.set(streamId.size, time.now, game.size)
 
     if (options.bgm) this.bgMuisc = effect.clips.bgm.loop()
   }
@@ -137,7 +138,7 @@ export class Head extends Archetype {
     //make sure apple didnt spawn in body 🍏
     if (!apple.shouldSpawn && apple.shouldCheckSpawn) {
       apple.shouldCheckSpawn = false
-      streams.set(streamId.apple, game.tick, apple.x * 10 + apple.y)
+      streams.set(streamId.apple, time.now, apple.x * 10 + apple.y)
     }
 
     //spawn apple 
@@ -181,12 +182,14 @@ export class Head extends Archetype {
     if (game.dir != this.previousDir) {
       effect.clips.swipe.play(0.02)
       this.previousDir = game.dir
-      streams.set(streamId.dir, game.tick, game.dir)
     }
 
     //spawn new body part 🐍
     game.bodyColour = !game.bodyColour
     archetypes.Body.spawn({})
+
+    streams.set(streamId.headX, time.now, pos.x)
+    streams.set(streamId.headY, time.now, pos.y)
 
     //move haed ➡️
     this.oldPos.x = pos.x
@@ -197,6 +200,7 @@ export class Head extends Archetype {
       case 1: pos.y++; break
       case 3: pos.y--; break
     }
+
 
     //hit wall 🧱
     if (Math.max(pos.x, pos.y) > 9 || Math.min(pos.x, pos.y) < 0) {
@@ -209,6 +213,7 @@ export class Head extends Archetype {
       } else death()
     }
 
+
     //eat apple 🍏
     if (apple.x == pos.x && apple.y == pos.y) {
       game.size++
@@ -216,6 +221,7 @@ export class Head extends Archetype {
       effect.clips.eat.play(0.02)
       archetypes.ScoreEffect.spawn({})
       apple.shouldSpawn = true
+      streams.set(streamId.size, time.now, game.size)
 
       if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
     }

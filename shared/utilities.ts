@@ -2,10 +2,12 @@ import { skin } from "./skin.js";
 import { options } from "../play/src/engine/configuration.js"
 
 
-export const streamId = {
-  dir: 0,
-  apple: 1,
-  death: 2,
+export enum streamId {
+  headX,
+  headY,
+  apple,
+  size,
+  death
 }
 
 //static layouts used for drawing stuff

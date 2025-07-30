@@ -36,6 +36,6 @@ export const death = () => {
   game.lose = true
   if (options.bgm) effect.clips.bgm_end.play(0.02); else effect.clips.die.play(0.02)
   game.deathTime = time.now
-  streams.set(streamId.death, game.tick, 1)
+  streams.set(streamId.death, time.now, 1)
 }
 
