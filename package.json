@@ -9,9 +9,10 @@
   "scripts": {
     "dev:play": "sonolus-cli --dev ./play",
     "dev:watch": "sonolus-cli --dev ./watch",
+    "dev:tutorial": "sonolus-cli --dev ./tutorial",
     "type-check": "tsc -p ./shared --noEmit && tsc -p ./play --noEmit && tsc -p ./watch --noEmit",
-    "build": "sonolus-cli --build ./play && sonolus-cli --build ./watch",
-    "static": "sonolus-cli --build ./play && sonolus-cli --build ./watch && cp ./dist/EnginePlayData ./source/engines/SnakeEngine/playData && cp ./dist/EngineWatchData ./source/engines/SnakeEngine/watchData && cp ./dist/EngineConfiguration ./source/engines/SnakeEngine/configuration && cp ./dist/LevelData ./source/levels/snake/data && sonolus-pack && sonolus-generate-static -a https://lbo44.github.io/Sonolus-Snake-Engine/ && cp ./web/. -r ./static"
+    "build": "sonolus-cli --build ./play && sonolus-cli --build ./watch && sonolus-cli --build ./tutorial",
+    "static": "sonolus-cli --build ./play && sonolus-cli --build ./watch && sonolus-cli --build ./tutorial && cp ./dist/EnginePlayData ./source/engines/SnakeEngine/playData && cp ./dist/EngineWatchData ./source/engines/SnakeEngine/watchData && cp ./dist/EngineTutorialData ./source/engines/SnakeEngine/tutorialData && cp ./dist/EngineConfiguration ./source/engines/SnakeEngine/configuration && cp ./dist/LevelData ./source/levels/snake/data && sonolus-pack && sonolus-generate-static -a https://lbo44.github.io/Sonolus-Snake-Engine/ && cp ./web/. -r ./static"
   },
   "dependencies": {
     "@sonolus/core": "^7.14.0",
