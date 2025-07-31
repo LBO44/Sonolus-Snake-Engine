@@ -1,6 +1,8 @@
+import { effect } from '../../../../../shared/effect.js'
 import { skin } from '../../../../../shared/skin.js'
 import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, TailDespawnAnimation, scaleToGrid as tg } from "../../../../../shared/utilities.js"
 import { options } from "../../configuration.js"
+import { archetypes } from './index.js'
 
 export class Head extends Archetype {
 
@@ -23,7 +25,57 @@ export class Head extends Archetype {
   })
 
 
+  scheduleSfx() {
+
+    {
+      let key = 0
+      while (true) {
+        const newKey = streams.getNextKey(streamId.size, key)
+        if (key == newKey) break
+        key = newKey
+        effect.clips.eat.schedule(key, 0.005)
+
+        const posKey = streams.getNextKey(streamId.headX, key)
+        const x = streams.getValue(streamId.headX, posKey)
+        const y = streams.getValue(streamId.headY, posKey)
+        archetypes.ScoreEffect.spawn({ time: key, x, y })
+      }
+    }
+
+    {
+      const deathTime = streams.getNextKey(streamId.death, 0)
+      effect.clips.die.schedule(deathTime, 0.02)
+    }
+
+    if (options.noWall) {
+      let key = 0
+      while (true) {
+        const newKey = streams.getNextKey(streamId.headX, key)
+        if (key == newKey) break
+
+        const oldPos = {
+          x: streams.getValue(streamId.headX, key),
+          y: streams.getValue(streamId.headY, key)
+        }
+        const newPos = {
+          x: streams.getValue(streamId.headX, newKey),
+          y: streams.getValue(streamId.headY, newKey)
+        }
+
+        key = newKey
+
+        const hasWrapped = Math.abs(newPos.x - oldPos.x) > 1 || Math.abs(newPos.y - oldPos.y) > 1
+        if (hasWrapped) effect.clips.wrap.schedule(key, 0.02)
+      }
+    }
+
+  }
+
+
   preprocess() {
+
+    this.scheduleSfx()
+
     ui.menu.set({
       anchor: screen.rect.shrink(0.05, 0.05).rt,
       pivot: { x: 1, y: 1 },
