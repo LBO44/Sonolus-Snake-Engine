@@ -70,8 +70,8 @@ export class Head extends Archetype {
 
     this.dir = 4
 
-    archetypes.Body.spawn({})
-    streams.set(streamId.size, time.now, game.size)
+    archetypes.Body.spawn({ shouldExportBodySize: true, bodySize: game.size })
+    streams.set(streamId.score, time.now, game.size)
 
     if (options.bgm) this.bgMuisc = effect.clips.bgm.loop()
   }
@@ -184,10 +184,6 @@ export class Head extends Archetype {
       this.previousDir = game.dir
     }
 
-    //spawn new body part 🐍
-    game.bodyColour = !game.bodyColour
-    archetypes.Body.spawn({})
-
     streams.set(streamId.headX, time.now, pos.x)
     streams.set(streamId.headY, time.now, pos.y)
 
@@ -215,16 +211,26 @@ export class Head extends Archetype {
 
 
     //eat apple 🍏
+    let appleEtaten = false
     if (apple.x == pos.x && apple.y == pos.y) {
       game.size++
+      appleEtaten = true
       this.scoreUpdateTime = time.now + 0.5
       effect.clips.eat.play(0.02)
       archetypes.ScoreEffect.spawn({})
       apple.shouldSpawn = true
-      streams.set(streamId.size, time.now, game.size)
+      streams.set(streamId.score, time.now, game.size)
 
       if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
     }
+
+    //spawn new body part 🐍
+    game.bodyColour = !game.bodyColour
+    archetypes.Body.spawn({
+      shouldExportBodySize: appleEtaten,
+      bodySize: game.size,
+    })
+
 
     // blinking border animation 
     if (!options.noWall) this.borderAlert = (Math.max(pos.x, pos.y) > 8 || Math.min(pos.x, pos.y) < 1)

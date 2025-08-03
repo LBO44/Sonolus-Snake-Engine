@@ -30,7 +30,7 @@ export class Head extends Archetype {
     {
       let key = 0
       while (true) {
-        const newKey = streams.getNextKey(streamId.size, key)
+        const newKey = streams.getNextKey(streamId.score, key)
         if (key == newKey) break
         key = newKey
         effect.clips.eat.schedule(key, 0.005)
@@ -122,11 +122,16 @@ export class Head extends Archetype {
   }
 
 
-  drawBody(size: number, deathTime: number) {
+  drawBody(deathTime: number) {
+
+    const bodySize = Math.floor(streams.getValue(streamId.bodySize, time.now))
+
+    debug.log(streams.getValue(streamId.bodySize, time.now))
+
 
     let prevKey = time.now
 
-    for (let index = 0; index < size; index++) {
+    for (let index = 0; index < bodySize; index++) {
 
       prevKey = streams.getPreviousKey(streamId.headX, prevKey)
 
@@ -134,8 +139,9 @@ export class Head extends Archetype {
       const y = streams.getValue(streamId.headY, prevKey)
 
       const bodySkin = (y + x) % 2 == 0 ? skin.sprites.bodyLight.id : skin.sprites.bodyDark.id
+      const nextBodySize = Math.floor(streams.getValue(streamId.bodySize, streams.getNextKey(streamId.headX, time.now)))
 
-      if (time.now < deathTime && index == size - 1) {
+      if (time.now < deathTime && index == bodySize - 1 && bodySize == nextBodySize) {
         let rect = new Rect
         TailDespawnAnimation(rect, this.getDir(prevKey, x, y), { x: x, y: y }, this.animationProgress())
         skin.sprites.shadow.draw(rect.translate(0, -0.02), 39, 1)
@@ -161,7 +167,7 @@ export class Head extends Archetype {
     }
   }
 
-  drawHeadAndUI(size: number, deathTime: number) {
+  drawHeadAndUI(deathTime: number) {
 
     const oldPos = {
       x: streams.getValue(streamId.headX, streams.getPreviousKey(streamId.headX, time.now)),
@@ -235,20 +241,19 @@ export class Head extends Archetype {
 
     //draw UI
     if (options.dpad) drawDpad(this.dpadLayout, 0 /*game.dir*/)
-    drawScore(Math.min(999, size - 3), this.scoreLayouts, streams.getPreviousKey(streamId.size, time.now) + 0.5 - time.now)
+    const score = Math.floor(streams.getValue(streamId.score, time.now))
+    drawScore(Math.min(999, score - 3), this.scoreLayouts, streams.getPreviousKey(streamId.score, time.now) + 0.5 - time.now)
 
   }
 
 
   updateParallel() {
 
-    const size = Math.floor(streams.getValue(streamId.size, time.now))
-
     const deathTime = streams.getNextKey(streamId.death, 0)
 
-    this.drawBody(size - 1, deathTime)
+    this.drawBody(deathTime)
 
-    this.drawHeadAndUI(size, deathTime)
+    this.drawHeadAndUI(deathTime)
   }
 
 }

@@ -1,5 +1,5 @@
 import { apple, death, game, pos } from "./Shared.js"
-import { scaleToGrid as tg, layout, TailDespawnAnimation } from "../../../../../shared/utilities.js"
+import { scaleToGrid as tg, layout, TailDespawnAnimation, streamId } from "../../../../../shared/utilities.js"
 import { skin } from '../../../../../shared/skin.js'
 
 /** Each body entity does 4 things:
@@ -7,7 +7,10 @@ import { skin } from '../../../../../shared/skin.js'
  * - check if the snake's head hit that body part
  * - make sure the apple doesn't randomly spawn in the body
  * - dispawn itslef to ensure a consistent snake length*/
-export class Body extends SpawnableArchetype({}) {
+export class Body extends SpawnableArchetype({
+  shouldExportBodySize: Boolean,
+  bodySize: Number,
+}) {
 
   updateSequentialOrder = 1
 
@@ -44,7 +47,12 @@ export class Body extends SpawnableArchetype({}) {
         if (this.dir === -1) this.dir = game.dir
         this.tickLeft--
 
-        if (this.tickLeft === 0) { this.despawn = true } else {
+        if (this.tickLeft === 0) {
+
+          this.despawn = true
+          if (this.spawnData.shouldExportBodySize) streams.set(streamId.bodySize, time.now, this.spawnData.bodySize)
+
+        } else {
           //detect if the head hit the body.🤕
           if (this.x == pos.x && this.y == pos.y) death()
         }

@@ -6,7 +6,8 @@ export enum streamId {
   headX,
   headY,
   apple,
-  size,
+  score,
+  bodySize,
   death
 }
 
