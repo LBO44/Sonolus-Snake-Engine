@@ -8,6 +8,7 @@ export enum streamId {
   apple,
   score,
   bodySize,
+  dpadDir,
   death
 }
 

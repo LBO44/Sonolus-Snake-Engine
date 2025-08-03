@@ -240,7 +240,11 @@ export class Head extends Archetype {
     skin.sprites.border.draw(layout.gridBorder, 3, 1)
 
     //draw UI
-    if (options.dpad) drawDpad(this.dpadLayout, 0 /*game.dir*/)
+    if (options.dpad) {
+      const dir = streams.getValue(streamId.dpadDir, streams.getPreviousKey(streamId.dpadDir, time.now))
+      drawDpad(this.dpadLayout, dir)
+    }
+
     const score = Math.floor(streams.getValue(streamId.score, time.now))
     drawScore(Math.min(999, score - 3), this.scoreLayouts, streams.getPreviousKey(streamId.score, time.now) + 0.5 - time.now)
 

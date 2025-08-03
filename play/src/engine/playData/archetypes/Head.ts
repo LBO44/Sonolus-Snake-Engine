@@ -69,6 +69,7 @@ export class Head extends Archetype {
     this.oldPos.y = pos.y
 
     this.dir = 4
+    streams.set(streamId.dpadDir, time.now, this.dir)
 
     archetypes.Body.spawn({ shouldExportBodySize: true, bodySize: game.size })
     streams.set(streamId.score, time.now, game.size)
@@ -98,6 +99,7 @@ export class Head extends Archetype {
           if (game.dir != 3) this.dir = 1;
         }
       }
+      streams.set(streamId.dpadDir, time.now, this.dir) //export in case player overrides config
     }
   }
 
@@ -122,6 +124,7 @@ export class Head extends Archetype {
           if (game.dir != 1) this.dir = 3; // Down
         }
       }
+      streams.set(streamId.dpadDir, time.now, this.dir)
     }
   }
 
