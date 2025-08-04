@@ -56,7 +56,7 @@ export class Head extends Archetype {
 
     game.size = 3
     apple.shouldSpawn = true
-    pos.x = 1
+    pos.x = 3
     pos.y = 3
     game.tickDuration = 0.4
   }

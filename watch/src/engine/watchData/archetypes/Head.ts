@@ -111,10 +111,12 @@ export class Head extends Archetype {
 
   getDir(key: number, x: number, y: number) {
     let dir = 0
-    if (x < streams.getValue(streamId.headX, key + 0.01)) dir = 4
-    else if (x > streams.getValue(streamId.headX, key + 0.01)) dir = 2
-    else if (y < streams.getValue(streamId.headY, key + 0.01)) dir = 1
-    else if (y > streams.getValue(streamId.headY, key + 0.01)) dir = 3
+    const newX = streams.getValue(streamId.headX, key + 0.01)
+    const newY = streams.getValue(streamId.headY, key + 0.01)
+    if (x < newX) dir = 4
+    else if (x > newX) dir = 2
+    else if (y < newY) dir = 1
+    else if (y > newY) dir = 3
     return dir
   }
 
@@ -129,7 +131,7 @@ export class Head extends Archetype {
 
   drawBody(deathTime: number) {
 
-    const bodySize = Math.floor(streams.getValue(streamId.bodySize, time.now))
+    const bodySize = Math.floor(streams.getValue(streamId.bodySize, time.now)) - 1
 
     let prevKey = time.now
 
@@ -141,11 +143,31 @@ export class Head extends Archetype {
       const y = streams.getValue(streamId.headY, prevKey)
 
       const bodySkin = (y + x) % 2 == 0 ? skin.sprites.bodyLight.id : skin.sprites.bodyDark.id
-      const nextBodySize = Math.floor(streams.getValue(streamId.bodySize, streams.getNextKey(streamId.headX, time.now)))
+      const nextBodySize = Math.floor(streams.getValue(streamId.bodySize, streams.getNextKey(streamId.headX, time.now))) - 1
 
       if (time.now < deathTime && index == bodySize - 1 && bodySize == nextBodySize) {
         let rect = new Rect
-        TailDespawnAnimation(rect, this.getDir(prevKey, x, y), { x: x, y: y }, this.animationProgress())
+
+        let dir = this.getDir(prevKey, x, y)
+
+        if (options.noWall) {
+          const newX = streams.getValue(streamId.headX, streams.getNextKey(streamId.headX, prevKey))
+          const newY = streams.getValue(streamId.headY, streams.getNextKey(streamId.headY, prevKey))
+
+
+          const hasWrapped = (Math.abs(x - newX) > 1 || Math.abs(y - newY) > 1)
+
+          if (hasWrapped) {
+            switch (dir) {
+              case 4: dir = 2; break
+              case 2: dir = 4; break
+              case 3: dir = 1; break
+              case 1: dir = 3; break
+            }
+          }
+        }
+
+        TailDespawnAnimation(rect, dir, { x: x, y: y }, this.animationProgress())
         skin.sprites.shadow.draw(rect.translate(0, -0.02), 39, 1)
         skin.sprites.draw(bodySkin, rect, 40, 1)
       }
