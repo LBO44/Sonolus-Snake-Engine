@@ -1,5 +1,6 @@
 import { effect } from "../../../../../shared/effect.js"
-import { streamId } from "../../../../../shared/utilities.js"
+import { particle } from "../../../../../shared/particle.js"
+import { scaleToGrid as tg, streamId } from "../../../../../shared/utilities.js"
 import { options } from "../../configuration.js"
 
 //game variables
@@ -37,5 +38,13 @@ export const death = () => {
   if (options.bgm) effect.clips.bgm_end.play(0.02); else effect.clips.die.play(0.02)
   game.deathTime = time.now
   streams.set(streamId.death, time.now, 1)
+  let x = pos.x, y = pos.y
+  switch (game.dir) {
+    case 4: x--; break
+    case 2: x++; break
+    case 1: y--; break
+    case 3: y++; break
+  }
+  particle.effects.die.spawn(Rect.one.mul(0.14).translate(tg(x), tg(y)), 1.3, false)
 }
 

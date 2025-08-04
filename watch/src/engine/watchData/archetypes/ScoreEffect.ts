@@ -1,3 +1,4 @@
+import { particle } from "../../../../../shared/particle.js";
 import { skin } from "../../../../../shared/skin.js";
 import { scaleToGrid, layout } from "../../../../../shared/utilities.js"
 
@@ -20,6 +21,7 @@ export class ScoreEffect extends SpawnableArchetype({
 
   initialize() {
     this.aniDir = this.spawnData.x < 5 ? -1 : 1
+    if (!time.skip) particle.effects.eat.spawn(Rect.one.mul(0.14).translate(scaleToGrid(this.spawnData.x), scaleToGrid(this.spawnData.y)), 1.3, false)
   }
 
   updateParallel() {

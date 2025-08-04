@@ -45,6 +45,11 @@ export class Head extends Archetype {
     {
       const deathTime = streams.getNextKey(streamId.death, 0)
       effect.clips.die.schedule(deathTime, 0.02)
+      archetypes.DeathParticle.spawn({
+        time: deathTime,
+        x: streams.getValue(streamId.headX, deathTime),
+        y: streams.getValue(streamId.headY, deathTime),
+      })
     }
 
     if (options.noWall) {
@@ -125,9 +130,6 @@ export class Head extends Archetype {
   drawBody(deathTime: number) {
 
     const bodySize = Math.floor(streams.getValue(streamId.bodySize, time.now))
-
-    debug.log(streams.getValue(streamId.bodySize, time.now))
-
 
     let prevKey = time.now
 

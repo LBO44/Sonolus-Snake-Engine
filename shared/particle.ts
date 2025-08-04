@@ -1,3 +1,6 @@
 export const particle = defineParticle({
-    effects: {},
+    effects: {
+        eat: "Eat",
+        die: "Die",
+    },
 })
