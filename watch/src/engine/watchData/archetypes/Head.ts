@@ -24,6 +24,7 @@ export class Head extends Archetype {
     title: Rect
   })
 
+  isReplay = this.entityMemory(Boolean)
 
   scheduleSfx() {
 
@@ -79,7 +80,7 @@ export class Head extends Archetype {
 
   preprocess() {
 
-    this.scheduleSfx()
+    this.isReplay = streams.getNextKey(streamId.apple, -5) != -5
 
     ui.menu.set({
       anchor: screen.rect.shrink(0.05, 0.05).rt,
@@ -91,6 +92,8 @@ export class Head extends Archetype {
       background: true,
     })
 
+    if (!this.isReplay) return
+
     ui.progress.set({
       anchor: screen.rect.lb.add(new Vec(0.05, 0.05)),
       pivot: { x: 0, y: 0 },
@@ -100,11 +103,13 @@ export class Head extends Archetype {
       horizontalAlign: HorizontalAlign.Center,
       background: true,
     })
+
+    this.scheduleSfx()
   }
 
 
   initialize() {
-    if (options.dpad) dpadInitialize(this.dpadLayout)
+    if (options.dpad && this.isReplay) dpadInitialize(this.dpadLayout)
   }
 
 
@@ -277,11 +282,20 @@ export class Head extends Archetype {
 
   updateParallel() {
 
-    const deathTime = streams.getNextKey(streamId.death, 0)
+    if (this.isReplay) {
 
-    this.drawBody(deathTime)
+      const deathTime = streams.getNextKey(streamId.death, 0)
 
-    this.drawHeadAndUI(deathTime)
+      this.drawBody(deathTime)
+
+      this.drawHeadAndUI(deathTime)
+    }
+
+    else {
+      skin.sprites.watchError.draw(Rect.one.scale(0.496, 0.024).translate(0, -0.3), 1, 1)
+      skin.sprites.snakeError.draw(Rect.one.scale(0.26, 0.1).mul(2), 0, 1)
+    }
+
   }
 
 }

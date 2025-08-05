@@ -26,6 +26,9 @@ export const skin = defineSkin({
     button: SkinSpriteName.NoteConnectionBlueSeamless,
     score: "Score",
     skull: "Skull",
+    watchError: "Watch Error",
+    previewError: "Preview Error",
+    snakeError: "Snake Error",
     //numbers
     numberZero: "NumberZero",
     numberOne: "NumberOne",
