@@ -21,7 +21,8 @@ export class Head extends Archetype {
   hasWrapped = this.entityMemory(Boolean)
   blink = this.entityMemory(Number)
   oldPos = this.entityMemory({ x: Number, y: Number })
-  newApple = this.entityMemory({ x: Number, y: Number })
+
+  notEmptySpace = levelMemory(Tuple(100, Number))
 
   scoreUpdateTime = this.entityMemory(Number)
   bgMuisc = this.entityMemory(LoopedEffectClipInstanceId)
@@ -55,7 +56,7 @@ export class Head extends Archetype {
     })
 
     game.size = 3
-    apple.shouldSpawn = true
+    this.newApple()
     pos.x = 3
     pos.y = 3
     game.tickDuration = 0.4
@@ -138,28 +139,6 @@ export class Head extends Archetype {
       this.onTick()
     }
 
-    //make sure apple didnt spawn in body 🍏
-    if (!apple.shouldSpawn && apple.shouldCheckSpawn) {
-      apple.shouldCheckSpawn = false
-      streams.set(streamId.apple, time.now, apple.x * 10 + apple.y)
-    }
-
-    //spawn apple 
-    if (apple.shouldSpawn) {
-      apple.shouldSpawn = false
-      apple.shouldCheckSpawn = true
-      this.newApple.x = Math.randomInt(0, 9)
-      this.newApple.y = Math.randomInt(0, 9)
-      if (this.newApple.x === apple.x && this.newApple.y === apple.y) {
-        //move the apple if it spawned inside the head
-        apple.x = (this.newApple.x + Math.randomInt(2, 4)) % 10
-        apple.y = (this.newApple.y + Math.randomInt(2, 4)) % 10
-      } else {
-        apple.x = this.newApple.x
-        apple.y = this.newApple.y
-      }
-    }
-
     // not ideal as we should only do those once
     if (game.lose) {
       effect.clips.stopLoop(this.bgMuisc)
@@ -200,6 +179,9 @@ export class Head extends Archetype {
       case 3: pos.y--; break
     }
 
+    //Save body pos to spawn apple correctly :HinaLul:
+    const posIdx = pos.x * 10 + pos.y
+    this.notEmptySpace.set(game.tick % 100, posIdx)
 
     //hit wall 🧱
     if (Math.max(pos.x, pos.y) > 9 || Math.min(pos.x, pos.y) < 0) {
@@ -216,16 +198,20 @@ export class Head extends Archetype {
     //eat apple 🍏
     let appleEtaten = false
     if (apple.x == pos.x && apple.y == pos.y) {
-      game.size++
       appleEtaten = true
+      game.size++
+
       this.scoreUpdateTime = time.now + 0.5
       effect.clips.eat.play(0.02)
       archetypes.ScoreEffect.spawn({})
-      apple.shouldSpawn = true
       streams.set(streamId.score, time.now, game.size)
+
+      this.newApple()
 
       if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
     }
+
+    if (!appleEtaten) this.notEmptySpace.set(((game.tick - game.size + 1) % 100 + 100) % 100, -1)
 
     //spawn new body part 🐍
     game.bodyColour = !game.bodyColour
@@ -243,6 +229,30 @@ export class Head extends Archetype {
 
   }
 
+  newApple() {
+    let freeCount = 0
+    for (let i = 0; i < 100; i++) {
+      if (!this.notEmptySpace.has(i)) freeCount++
+    }
+
+    if (freeCount === 0) return
+
+    const targetRank = Math.randomInt(0, freeCount - 1)
+
+    let rank = 0
+    for (let i = 0; i < 100; i++) {
+      if (!this.notEmptySpace.has(i)) {
+        if (rank === targetRank) {
+          apple.x = Math.floor(i / 10)
+          apple.y = i % 10
+          break
+        }
+        rank++
+      }
+    }
+
+    streams.set(streamId.apple, time.now, apple.x * 10 + apple.y)
+  }
 
   /** Draw the game (grid, ui, snake head...)
    * but also handle drawing related logic
@@ -304,11 +314,10 @@ export class Head extends Archetype {
     }
 
     //draw apple 🍎
-    if (!apple.shouldCheckSpawn && !apple.shouldSpawn) {
-      skin.sprites.apple.draw(
-        floatingEffect(layout.sqaure)
-          .translate(tg(apple.x), tg(apple.y) + 0.02), 50, 1)
-    }
+    skin.sprites.apple.draw(
+      floatingEffect(layout.sqaure)
+        .translate(tg(apple.x), tg(apple.y) + 0.02), 50, 1)
+
 
     //draw grid ⬜
     skin.sprites.grid.draw(layout.grid, 1, 1)

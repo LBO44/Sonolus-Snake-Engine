@@ -262,7 +262,7 @@ export class Head extends Archetype {
 
     skin.sprites.apple.draw(
       floatingEffect(layout.sqaure)
-        .translate(tg(apple.x), tg(apple.y) + 0.02), 40, 1)
+        .translate(tg(apple.x), tg(apple.y) + 0.02), 60, 1)
 
     //draw grid ⬜
     skin.sprites.grid.draw(layout.grid, 1, 1)

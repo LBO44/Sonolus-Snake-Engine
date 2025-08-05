@@ -62,11 +62,6 @@ export class Body extends SpawnableArchetype({
       else if (this.tickLeft === 1) this.despawn = true
     }
 
-    //check and respawn the apple if it spawned inside the body 🍎
-    if (apple.shouldCheckSpawn && this.x == apple.x && this.y == apple.y) {
-      apple.shouldSpawn = true
-      apple.shouldCheckSpawn = false
-    }
   }
 
 

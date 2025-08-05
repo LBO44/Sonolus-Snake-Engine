@@ -27,8 +27,6 @@ export const game = levelMemory({
 export const apple = levelMemory({
   x: Number,
   y: Number,
-  shouldSpawn: Boolean,
-  shouldCheckSpawn: Boolean,
 })
 
 /** function to call when the snake dies,
