@@ -1,12 +1,26 @@
 {
     "version": 13,
-    "title": {"en":"SNAKE"},
-    "subtitle": {"en":"A Simple Snake Game Engine"},
-    "author": {"en":"LBO44"},
-    "description":{"en":"My attempt at making a basic snake game in Sonolus.\n - Currently only play mode is usable, watch mode is likely going to take a while.\n - Engine source code is available at: https://github.com/LBO44/Sonolus-Snake-Engine."},
+    "title": {
+        "en": "SNAKE"
+    },
+    "subtitle": {
+        "en": "A Simple Snake Game Engine"
+    },
+    "author": {
+        "en": "LBO44#1008"
+    },
+    "description": {
+        "en": "My attempt at making a basic snake game in Sonolus.\n - It even support replay mode!\n - Engine source code is available at: https://github.com/LBO44/Sonolus-Snake-Engine."
+    },
     "skin": "SnakeSkin",
     "background": "darkblue",
     "effect": "8bitSnake",
-    "particle": "none",
-    "tags":[{"title":{"en":"⚠ WIP"}},{"title":{"en":"Arcade"}}]
-    }
+    "particle": "Snake",
+    "tags": [
+        {
+            "title": {
+                "en": "Arcade"
+            }
+        }
+    ]
+}

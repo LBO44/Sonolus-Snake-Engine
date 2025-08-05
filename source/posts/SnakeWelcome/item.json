@@ -1,8 +1,8 @@
 {
   "version":1,
   "title": {"en":"Welcome to my Sonolus Snake Game"},
-  "description": {"en":"First of all, Thank You so much for trying my simple snake game!\n\nThis basic and still unfinished snake game, is actually my very first proper and \"big\" coding project, and so far it has been pretty fun to make!\n\nHowever, it's still a huge work in progress, and a bunch of bugs are likely going to occur.\nIf you want to report bugs or request (reasonable) new features, feel free to contact me in the Sonolus Discord server or at the GitHub repo: https://github.com/LBO44/Sonolus-Snake-Engine.\n\nCurrent most important issues:\n - Skins from other engines are unlikely to work.\n - I'm still trying to figure out how replay/watch mode works.\n\nHave fun while playing!"},
+  "description": {"en":"First of all, Thank You so much for trying my simple Snake game!\n\nThis basic Snake game, is actually my very first proper and \"big\" coding project, and it has been pretty fun to make!\n\nWhile I consider this project finished, it might still have some bugs. If you want to report them, feel free to contact me on Discord.\n\nHave fun while playing!"},
   "time":1732230000000,
-  "author":{"en":"LBO44"},
+  "author":{"en":"LBO44#1008"},
   "tags":[]
 }
