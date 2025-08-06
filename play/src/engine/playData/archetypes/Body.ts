@@ -1,6 +1,6 @@
-import { apple, death, game, pos } from "./Shared.js"
-import { scaleToGrid as tg, layout, TailDespawnAnimation, streamId } from "../../../../../shared/utilities.js"
 import { skin } from '../../../../../shared/skin.js'
+import { layout, streamId, TailDespawnAnimation, scaleToGrid as tg } from "../../../../../shared/utilities.js"
+import { death, game, pos } from "./Shared.js"
 
 /** Each body entity does 4 things:
  * - draw itslef to give the snake a nice body

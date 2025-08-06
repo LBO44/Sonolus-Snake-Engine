@@ -3,7 +3,7 @@ import { skin } from '../../../../../shared/skin.js';
 import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, scaleToGrid as tg } from "../../../../../shared/utilities.js";
 import { options } from "../../configuration.js";
 import { archetypes } from "./index.js";
-import { death, game, pos } from "./Shared.js";
+import { death, game, pos, posHistory } from "./Shared.js";
 
 /**The snake head entity execute the majority of the game's logic*/
 export class Head extends Archetype {
@@ -27,8 +27,6 @@ export class Head extends Archetype {
     x: Number,
     y: Number,
   })
-
-  notEmptySpace = levelMemory(Tuple(100, Number))
 
   scoreUpdateTime = this.entityMemory(Number)
   bgMuisc = this.entityMemory(LoopedEffectClipInstanceId)
@@ -191,7 +189,7 @@ export class Head extends Archetype {
 
     //Save body pos to spawn apple correctly :HinaLul:
     const posIdx = pos.x * 10 + pos.y
-    this.notEmptySpace.set(game.tick % 100, posIdx)
+    posHistory.set(game.tick % 100, posIdx)
 
     //hit wall 🧱
     if (Math.max(pos.x, pos.y) > 9 || Math.min(pos.x, pos.y) < 0) {
@@ -221,7 +219,7 @@ export class Head extends Archetype {
       if (game.size % 5 == 0) game.tickDuration = Math.max(0.1, game.tickDuration - 0.025)
     }
 
-    if (!appleEtaten) this.notEmptySpace.set(((game.tick - game.size + 1) % 100 + 100) % 100, -1)
+    if (!appleEtaten) posHistory.set(((game.tick - game.size + 1) % 100 + 100) % 100, -1)
 
     //spawn new body part 🐍
     game.bodyColour = !game.bodyColour
@@ -242,7 +240,7 @@ export class Head extends Archetype {
   newApple() {
     let freeCount = 0
     for (let i = 0; i < 100; i++) {
-      if (!this.notEmptySpace.has(i)) freeCount++
+      if (!posHistory.has(i)) freeCount++
     }
 
     if (freeCount === 0) return
@@ -251,7 +249,7 @@ export class Head extends Archetype {
 
     let rank = 0
     for (let i = 0; i < 100; i++) {
-      if (!this.notEmptySpace.has(i)) {
+      if (!posHistory.has(i)) {
         if (rank === targetRank) {
           this.apple.x = Math.floor(i / 10)
           this.apple.y = i % 10
