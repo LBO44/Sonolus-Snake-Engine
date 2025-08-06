@@ -3,7 +3,7 @@ import { skin } from '../../../../../shared/skin.js';
 import { dpadInitialize, drawDpad, drawScore, floatingEffect, HeadAppearAnimation, layout, streamId, scaleToGrid as tg } from "../../../../../shared/utilities.js";
 import { options } from "../../configuration.js";
 import { archetypes } from "./index.js";
-import { apple, death, game, pos } from "./Shared.js";
+import { death, game, pos } from "./Shared.js";
 
 /**The snake head entity execute the majority of the game's logic*/
 export class Head extends Archetype {
@@ -21,6 +21,12 @@ export class Head extends Archetype {
   hasWrapped = this.entityMemory(Boolean)
   blink = this.entityMemory(Number)
   oldPos = this.entityMemory({ x: Number, y: Number })
+
+
+  apple = this.entityMemory({
+    x: Number,
+    y: Number,
+  })
 
   notEmptySpace = levelMemory(Tuple(100, Number))
 
@@ -56,7 +62,6 @@ export class Head extends Archetype {
     })
 
     game.size = 3
-    this.newApple()
     pos.x = 3
     pos.y = 3
     game.tickDuration = 0.4
@@ -66,11 +71,16 @@ export class Head extends Archetype {
   initialize() {
     if (options.dpad) dpadInitialize(this.dpadLayout)
 
+    this.newApple()
+
     this.oldPos.x = pos.x
     this.oldPos.y = pos.y
 
     this.dir = 4
     streams.set(streamId.dpadDir, time.now, this.dir)
+
+    streams.set(streamId.headX, time.now, pos.x)
+    streams.set(streamId.headY, time.now, pos.y)
 
     archetypes.Body.spawn({ shouldExportBodySize: true, bodySize: game.size })
     streams.set(streamId.score, time.now, game.size)
@@ -197,7 +207,7 @@ export class Head extends Archetype {
 
     //eat apple 🍏
     let appleEtaten = false
-    if (apple.x == pos.x && apple.y == pos.y) {
+    if (this.apple.x == pos.x && this.apple.y == pos.y) {
       appleEtaten = true
       game.size++
 
@@ -243,15 +253,15 @@ export class Head extends Archetype {
     for (let i = 0; i < 100; i++) {
       if (!this.notEmptySpace.has(i)) {
         if (rank === targetRank) {
-          apple.x = Math.floor(i / 10)
-          apple.y = i % 10
+          this.apple.x = Math.floor(i / 10)
+          this.apple.y = i % 10
           break
         }
         rank++
       }
     }
 
-    streams.set(streamId.apple, time.now, apple.x * 10 + apple.y)
+    streams.set(streamId.apple, time.now, this.apple.x * 10 + this.apple.y)
   }
 
   /** Draw the game (grid, ui, snake head...)
@@ -316,7 +326,7 @@ export class Head extends Archetype {
     //draw apple 🍎
     skin.sprites.apple.draw(
       floatingEffect(layout.sqaure)
-        .translate(tg(apple.x), tg(apple.y) + 0.02), 50, 1)
+        .translate(tg(this.apple.x), tg(this.apple.y) + 0.02), 50, 1)
 
 
     //draw grid ⬜

@@ -24,11 +24,6 @@ export const game = levelMemory({
   bodyColour: Boolean,//used to alternate the body colours
 })
 
-export const apple = levelMemory({
-  x: Number,
-  y: Number,
-})
-
 /** function to call when the snake dies,
  * will be executed by both `Head` and `Body` entities*/
 export const death = () => {
